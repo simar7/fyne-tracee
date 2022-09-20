@@ -5,8 +5,8 @@ go 1.19
 require (
 	fyne.io/fyne/v2 v2.2.3
 	fyne.io/x/fyne v0.0.0-20220811211558-27fab34c671c
+	github.com/aquasecurity/tracee/types v0.0.0-20220919181618-792b5106fa16
 	github.com/lithammer/fuzzysearch v1.1.5
-	github.com/tjarratt/babble v0.0.0-20210505082055-cbca2a4833c1
 )
 
 require (
@@ -24,8 +24,6 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jsummers/gobmp v0.0.0-20151104160322-e2ba15ffa76e // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
-	github.com/onsi/ginkgo v1.16.5 // indirect
-	github.com/onsi/gomega v1.20.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/srwiley/oksvg v0.0.0-20200311192757-870daf9aa564 // indirect
 	github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9 // indirect

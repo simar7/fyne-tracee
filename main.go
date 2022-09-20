@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"time"
-
-	"github.com/lithammer/fuzzysearch/fuzzy"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -12,7 +14,7 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
-	"github.com/tjarratt/babble"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 type AppConfig struct {
@@ -20,9 +22,17 @@ type AppConfig struct {
 }
 
 type traceeEvent struct {
-	Timestamp int64
-	EventName string
-	HostName  string
+	Context struct {
+		Timestamp   int64  `json:"timestamp"`
+		EventName   string `json:"eventName"`
+		HostName    string `json:"hostName"`
+		ProcessId   string `json:"processId"`
+		ProcessName string `json:"processName"`
+	} `json:"Context"`
+	SigMetadata struct {
+		ID          string `json:"ID"`
+		Description string `json:"Description"`
+	}
 }
 
 var traceeEvents []string
@@ -50,7 +60,8 @@ func main() {
 			o.(*widget.Label).Bind(i.(binding.String))
 		})
 
-	events := generateTraceeEvents()
+	events := make(chan traceeEvent, 100)
+	go generateTraceeEvents(events)
 	go addTraceeEvents(data, events)
 
 	entry := xwidget.NewCompletionEntry([]string{})
@@ -75,26 +86,30 @@ func main() {
 	myWindow.ShowAndRun()
 }
 
-func generateTraceeEvents() (events []traceeEvent) {
-	babbler := babble.NewBabbler()
-	for i := 0; i < 100; i++ {
-		time.Sleep(time.Microsecond)
-		events = append(events, traceeEvent{
-			Timestamp: time.Now().Unix(),
-			EventName: babbler.Babble(),
-			HostName:  babbler.Babble(),
-		})
+func generateTraceeEvents(events chan traceeEvent) {
+	handleEventFunc := func(w http.ResponseWriter, r *http.Request) {
+		log.Println("received an event")
+		b, _ := io.ReadAll(r.Body)
+		log.Println(string(b))
+		var te traceeEvent
+		if err := json.Unmarshal(b, &te); err != nil {
+			log.Print(err)
+		}
+		events <- te
 	}
-	return
+
+	http.HandleFunc("/events", handleEventFunc)
+	http.ListenAndServe(":8888", nil)
 }
 
-func addTraceeEvents(data binding.ExternalStringList, events []traceeEvent) {
+func addTraceeEvents(data binding.ExternalStringList, events chan traceeEvent) {
 	for {
-		if len(events) > 0 {
-			for i := 0; i < len(events); i++ {
-				data.Append(fmt.Sprintf(`Timestamp: %d | EventName: %s | HostName: %s`, events[i].Timestamp, events[i].EventName, events[i].HostName))
-			}
+		select {
+		case e := <-events:
+			data.Append(fmt.Sprintf(`Timestamp: %d | EventName: %s | HostName: %s | ID: %s | Description: %s`, e.Context.Timestamp, e.Context.EventName, e.Context.HostName, e.SigMetadata.ID, e.SigMetadata.Description))
+		default:
+			log.Println("got nothing to do....")
+			time.Sleep(time.Second)
 		}
-		time.Sleep(time.Second * 1)
 	}
 }
