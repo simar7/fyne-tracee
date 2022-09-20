@@ -31,16 +31,44 @@ type traceeEvent struct {
 	}
 }
 
+//type appTheme struct {
+//}
+
+//func (a appTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
+//	if name == theme.ColorNameBackground {
+//		if variant == theme.VariantLight {
+//			return color.White
+//		}
+//		return color.Black
+//	}
+//
+//	return theme.DefaultTheme().Color(name, variant)
+//}
+//
+//func (a appTheme) Font(style fyne.TextStyle) fyne.Resource {
+//	return theme.DefaultTheme().Font(style)
+//}
+//
+//func (a appTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
+//	return theme.DefaultTheme().Icon(name)
+//}
+//
+//func (a appTheme) Size(name fyne.ThemeSizeName) float32 {
+//	return theme.DefaultTheme().Size(name)
+//}
+
 var traceeEvents []string
 
 func main() {
 	myApp := app.New()
-	myWindow := myApp.NewWindow("Tracee Events")
+	myWindow := myApp.NewWindow("Tracee UI")
 	myWindow.Resize(fyne.Size{
 		Width:  1280,
 		Height: 480,
 	})
 	myWindow.CenterOnScreen()
+
+	//myApp.Settings().SetTheme(appTheme{})
 
 	data := binding.BindStringList(
 		&traceeEvents,
