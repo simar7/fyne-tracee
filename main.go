@@ -17,16 +17,12 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
-type AppConfig struct {
-	data binding.ExternalStringList
-}
-
 type traceeEvent struct {
 	Context struct {
 		Timestamp   int64  `json:"timestamp"`
 		EventName   string `json:"eventName"`
 		HostName    string `json:"hostName"`
-		ProcessId   string `json:"processId"`
+		ProcessId   int    `json:"processId"`
 		ProcessName string `json:"processName"`
 	} `json:"Context"`
 	SigMetadata struct {
@@ -39,10 +35,9 @@ var traceeEvents []string
 
 func main() {
 	myApp := app.New()
-	ac := AppConfig{}
 	myWindow := myApp.NewWindow("Tracee Events")
 	myWindow.Resize(fyne.Size{
-		Width:  640,
+		Width:  1280,
 		Height: 480,
 	})
 	myWindow.CenterOnScreen()
@@ -50,7 +45,6 @@ func main() {
 	data := binding.BindStringList(
 		&traceeEvents,
 	)
-	ac.data = data
 
 	list := widget.NewListWithData(data,
 		func() fyne.CanvasObject {
@@ -65,8 +59,9 @@ func main() {
 	go addTraceeEvents(data, events)
 
 	entry := xwidget.NewCompletionEntry([]string{})
+	entry.SetPlaceHolder("Search for events...")
 	entry.OnChanged = func(input string) {
-		events, err := ac.data.Get()
+		events, err := data.Get()
 		if err != nil {
 			entry.HideCompletion()
 			return
@@ -78,7 +73,14 @@ func main() {
 			return
 		}
 
-		entry.SetOptions(matches[:5])
+		var subMatches int
+		if len(matches) >= 5 {
+			subMatches = 5
+		} else {
+			subMatches = len(matches)
+		}
+
+		entry.SetOptions(matches[:subMatches])
 		entry.ShowCompletion()
 	}
 
